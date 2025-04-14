@@ -9,7 +9,8 @@ export default function Transcript({ messages }: { messages: Message[] }) {
     <Box
       sx={{
         width: '90%',
-        height: '80%',
+        height: '45vh', // or 300px, 500px — whatever fits your layout
+        maxHeight: '45vh',
         overflowY: 'auto',
         backgroundColor: '#f2f2f2',
         borderRadius: 2,

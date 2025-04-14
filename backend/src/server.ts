@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userSettingsRoutes from "./routes/userSettings";
 import cohere from './routes/cohere';
+import transcribeRoutes from './routes/transcribe';
 
 dotenv.config();
 
@@ -13,8 +14,9 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: 'http://localhost:3000', credentials: true}));
-app.use("/api/settings", userSettingsRoutes);
+app.use('/api/settings', userSettingsRoutes);
 app.use('/api/cohere', cohere);
+app.use('/api/transcribe', transcribeRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI as string)

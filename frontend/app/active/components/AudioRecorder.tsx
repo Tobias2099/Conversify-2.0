@@ -1,12 +1,36 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
 
-export default function AudioRecorder({ isRecording }: { isRecording: boolean }) {
+export default function AudioRecorder({ isRecording, onTranscript }: { isRecording: boolean, onTranscript: (text: string) => void }) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const [audioURL, setAudioURL] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
+  const sendToBackend = async (blob: Blob) => {
+    const formData = new FormData();
+    formData.append('audio', blob, 'recording.webm');
+  
+    try {
+      const res = await fetch('http://localhost:5000/api/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+  
+      const data = await res.json();
+      console.log('📝 Transcript:', data.transcript);
+      if (onTranscript) {
+        console.log("📤 Calling onTranscript with:", data.transcript);
+        onTranscript(data.transcript);
+      } else {
+        console.warn("⚠️ onTranscript is undefined!");
+      }
+    } catch (err) {
+      console.error('Transcription failed:', err);
+    }
+  };
+
+  
   useEffect(() => {
     const prepareMedia = async () => {
       try {
@@ -20,11 +44,11 @@ export default function AudioRecorder({ isRecording }: { isRecording: boolean })
           chunksRef.current.push(e.data);
         };
 
-        recorder.onstop = () => {
+        recorder.onstop = async () => {
           const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-          const url = URL.createObjectURL(blob);
-          setAudioURL(url);
-          chunksRef.current = []; // clear for next round
+          setAudioURL(URL.createObjectURL(blob));
+          chunksRef.current = [];
+          sendToBackend(blob);
         };
       } catch (err) {
         console.error('Microphone access error:', err);
